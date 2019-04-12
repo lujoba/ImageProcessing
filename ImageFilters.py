@@ -232,11 +232,15 @@ if __name__ == "__main__":
         # print(ImageFilters.Process(i))
     a = ImageFilters.Process(path)
 
+    b = plt.subplot(2, 1, 2)
+
     for image in a:
-        # plt.imshow(image)
-        # plt.show()
-        print(image)
-        input()
+        b.imshow(image)
+        plt.pause(1)
+            
+    b.show()
+
+
     # a = a.astype(int)
     #print(a.shape)
     # a.reshape(a[0],a[1])
