@@ -17,7 +17,8 @@ class ImageFilters(object):
     def Process(self, data):
         # TODO use pre-allocated output array instead of hstack
 
-        return np.hstack([(f.Compute(data)) for f in self.apply])
+        # return np.hstack([(f.Compute(data)) for f in self.apply])
+        return [(f.Compute(data)) for f in self.apply]
 
     def __repr__(self):
         return "%s.%s(%s)" % (
@@ -187,7 +188,6 @@ class MedianBlur(Apply):
         image = cv2.imread(image)
         y = cv2.medianBlur(image, self.kernel_size) 
 
-
         return y
 
 class BilateralBlur(Apply):
@@ -232,11 +232,15 @@ if __name__ == "__main__":
         # print(ImageFilters.Process(i))
     a = ImageFilters.Process(path)
 
+    for image in a:
+        # plt.imshow(image)
+        # plt.show()
+        print(image)
+        input()
     # a = a.astype(int)
-    print(a.shape)
+    #print(a.shape)
     # a.reshape(a[0],a[1])
-    plt.imshow(a)
-    plt.show()
+    
     # f = cv2.imread(filelist[1])
     # imageList2.append(ImageFilters.Process(f))
 
