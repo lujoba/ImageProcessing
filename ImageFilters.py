@@ -1,7 +1,8 @@
 
 import numpy as np
 import cv2
-
+import matplotlib.pyplot as plt
+import os
 
 class ImageFilters(object):
 
@@ -35,14 +36,24 @@ class Apply(object):
         )
 
 
-class HorizontalFlips(Apply):
+class Flips(Apply):
     """
     Flip the image on the horizontal plane
     """
     
-    def __init__(self):
+    def __init__(self, orientation = 'both'):
         self.dimPerImg = 1
-    
+
+        if(orientation == 'horizontal'):
+            self.orientation = 0
+        elif(orientation == 'vertical'):
+            self.orientation = 1
+        elif(orientation =='both'):
+            self.orientation = -1
+
+    def Compute(self, image):
+        image = cv2.imread(image)
+        return cv2.flip(image,self.orientation)    
 
 
 class Inverse(Apply):
@@ -118,6 +129,7 @@ class ScharrDerivative(Apply):
         self.dimPerImg = 1
 
     def Compute(self, image):
+        image = cv2.imread(image)
         y = []
         image = cv2.GaussianBlur(image, (3, 3), 0)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -136,6 +148,8 @@ class Laplacian(Apply):
         self.dimPerImg = 1
 
     def Compute(self, image):
+        image = cv2.imread(image)
+
         y = []
 
         image = cv2.GaussianBlur(image, (3, 3), 0)
@@ -148,53 +162,84 @@ class Laplacian(Apply):
 
 class Blur(Apply):
 
-    def __init__(self, kernel_size = 0.0, step_size = 0.0):
-        self.dimPerChannel = 1
+    def __init__(self, kernel_size = 0, step_size = 0):
+        self.dimPerImg = 1
         self.kernel_size = kernel_size
         self.step_size = step_size
 
-    def Compute(self, x):
+    def Compute(self, image):
+        image = cv2.imread(image)
         y = [cv2.blur(image, (i, i))
-             for i in xrange(1, blurConfig['kernel_size'], blurConfig['step_size'])]
+             for i in range(1, self.kernel_size, self.step_size)]
         
         return y
 
-class GaussianBlur(Action):
+class GaussianBlur(Apply):
     
-    def __init__(self, kernel_size = 0.0, step_size = 0.0):
-        self.dimPerChannel = 1
+    def __init__(self, kernel_size = 0, step_size = 0):
+        self.dimPerImg = 1
         self.kernel_size = kernel_size
         self.step_size = step_size
 
-    def Compute(self, x):
+    def Compute(self, image):
+        image = cv2.imread(image)
         y = [cv2.GaussianBlur(image, (i, i), 0)
-            for i in xrange(1, gaussianBlurConfig['kernel_size'], gaussianBlurConfig['step_size'])]
+            for i in range(1, self.kernel_size, self.step_size)]
 
         return y
 
-class MedianBlur(Action):
+class MedianBlur(Apply):
 
-    def __init__(self, kernel_size = 0.0, step_size = 0.0):
-        self.dimPerChannel = 1
+    def __init__(self, kernel_size = 0, step_size = 0):
+        self.dimPerImg = 1
         self.kernel_size = kernel_size
         self.step_size = step_size
 
-    def Compute(self, x):
-        y = [cv2.medianBlur(image, i)
-            for i in xrange(1, medianBlurConfig['kernel_size'], medianBlurConfig['step_size'])]
+    def Compute(self, image):
+        image = cv2.imread(image)
+        y = [cv2.medianBlur(image, i) 
+             for i in range(1, self.kernel_size, self.step_size)]
 
         return y
 
-class BilateralBlur(Action):
+class BilateralBlur(Apply):
 
-    def __init__(self, kernel_size = 0.0, step_size = 0.0):
-        self.dimPerChannel = 1
+    def __init__(self, kernel_size = 0, step_size = 0):
+        self.dimPerImg = 1
         self.kernel_size = kernel_size
         self.step_size = step_size
 
-    def Compute(self, x):
+    def Compute(self, image):
+        image = cv2.imread(image)
         y = [cv2.bilateralFilter(image, i, i*2, i/2)
-            for i in xrange(1, bilateralBlurConfig['kernel_size'], bilateralBlurConfig['step_size'])]
+            for i in range(1, self.kernel_size, self.step_size)]
 
         return y
 
+if __name__ == "__main__":
+    ImageFilters = ImageFilters([Flips(orientation = 'both'),
+                                 # BilateralBlur(kernel_size=3, step_size=2),
+                                 MedianBlur(kernel_size=3, step_size=2),
+                                 GaussianBlur(kernel_size=3, step_size=2)], 109)
+
+    #path = '/home/pinazawa/gitProjs/datasets/NFeImg/Dataset_Nfe/notas_imagens/'
+    path = '/home/pinazawa/gitProjs/datasets/lowimg'
+
+    filelist = os.listdir(path)
+
+    filelist = [path + x for x in filelist]
+
+    imageList2 = []
+    # for i in tqdm(filelist):
+        # f = None
+        # f = cv2.imread(i)
+        # imageList2.append(ImageFilters.Process(i))
+        # print(ImageFilters.Process(i))
+    a = ImageFilters.Process(filelist[0])
+
+    plt.imshow(a[0])
+    plt.show()
+    # f = cv2.imread(filelist[1])
+    # imageList2.append(ImageFilters.Process(f))
+
+    # imageList2 = np.array(imageList2)
