@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import os
+import math
 
 class ImageFilters(object):
 
@@ -66,6 +67,7 @@ class Inverse(Apply):
     """
     
     def __init__(self):
+        print('Inverse')
         self.dimPerImg = 1
     
     def Compute(self, image):
@@ -80,20 +82,57 @@ class Inverse(Apply):
 class Scaling(Apply):
     """
     Scaling the image of the image
-    """
+    """ 
+    def __init__(self, dsize = 0, scaleXY = 0, interpolation = cv2.INTER_LINEAR):
+        self.dimPerImg = 1
+        self.dsize = dsize
+        self.scaleXY = scaleXY
+        self.interpolation = interpolation
 
+    def Compute(self, image):
+
+        image = cv2.imread(image)
+        y = cv2.resize(src = image, dsize = (0,0), fx=self.scaleXY, fy=self.scaleXY, interpolation=self.interpolation)
+        
+        return y
 
 class Rotation(Apply):
     """
     Rotate the image
     """
 
-    def __init___(self):
-        pass
+    def __init__(self, angle=15, dimPerImg=1):
+        print('Rotation')
+        self.dimPerImg = 1
+        self.angle = angle*(math.pi/180.0)
+        
 
     def Compute(self, image):
-        pass
 
+        image = cv2.imread(image)
+        
+        a = image.shape[0]
+        b = image.shape[1]
+
+        dim= (a*math.cos(angle) + b*math.sin(angle),a*math.sin(angle) + b*math.cos(angle),3)
+
+        black = np.zeros(dim)
+
+        h_black = black.shape[0]
+        w_black = black.shape[1]
+
+        #todo : put the image inside matrix
+
+        image_center = tuple(np.array(image.shape[1::-1]) / 2)
+        rot_mat = cv2.getRotationMatrix2D(image_center, self.angle, 1.0)
+        
+        proportion = heigth_rotmat/weigth_rotmat
+
+        y = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
+
+
+
+        return y
 
 class SobelDerivative(Apply):
     """
@@ -204,17 +243,19 @@ class BilateralBlur(Apply):
         return y
 
 if __name__ == "__main__":
-    ImageFilters = ImageFilters([GaussianBlur(kernel_size=5, step_size=2),
+    ImageFilters = ImageFilters([#GaussianBlur(kernel_size=5, step_size=2),
                                  Inverse(),
-                                 Flips(),
-                                 SobelDerivative(),
-                                 ScharrDerivative(),
-                                 Laplacian(), 
-                                 Blur(kernel_size=3, step_size=2), 
-                                 GaussianBlur(kernel_size=3, step_size=2),
-                                 MedianBlur(kernel_size=3, step_size=2), 
-                                 BilateralBlur(kernel_size=3, step_size=2)
-                                ],1)
+                                 # Flips(),
+                                 # SobelDerivative(),
+                                 # ScharrDerivative(),
+                                 # Laplacian(), 
+                                 # Blur(kernel_size=3, step_size=2), 
+                                 # GaussianBlur(kernel_size=3, step_size=2),
+                                 # MedianBlur(kernel_size=3, step_size=2), 
+                                 # BilateralBlur(kernel_size=3, step_size=2),
+                                 # Scaling(scaleXY = 1.5),
+                                 Rotation()
+                                 ],1)
                                  # GaussianBlur(kernel_size=3, step_size=2)], 109)
 
     #path = '/home/pinazawa/gitProjs/datasets/NFeImg/Dataset_Nfe/notas_imagens/'
@@ -232,13 +273,16 @@ if __name__ == "__main__":
         # print(ImageFilters.Process(i))
     a = ImageFilters.Process(path)
 
-    b = plt.subplot(2, 1, 2)
+    b = plt.subplot(2,1, 2)
+    c = plt.subplot(2,1,1)
+    original = cv2.imread(path)
 
     for image in a:
+        c.imshow(original)
+        
         b.imshow(image)
-        plt.pause(1)
-            
-    b.show()
+
+    plt.show()
 
 
     # a = a.astype(int)
