@@ -101,38 +101,59 @@ class Rotation(Apply):
     Rotate the image
     """
 
-    def __init__(self, angle=15, dimPerImg=1):
+    def __init__(self, angle=4, dimPerImg=1):
         print('Rotation')
         self.dimPerImg = 1
-        self.angle = angle*(math.pi/180.0)
+        self.angle = angle #*(math.pi/180.0)
         
 
     def Compute(self, image):
 
         image = cv2.imread(image)
         
-        a = image.shape[0]
-        b = image.shape[1]
+        # a = image.shape[0]
+        # b = image.shape[1]
 
-        dim= (a*math.cos(angle) + b*math.sin(angle),a*math.sin(angle) + b*math.cos(angle),3)
+        # dim= (a*math.cos(angle) + b*math.sin(angle),a*math.sin(angle) + b*math.cos(angle),3)
 
-        black = np.zeros(dim)
+        # black = np.zeros(dim)
 
-        h_black = black.shape[0]
-        w_black = black.shape[1]
+        # h_black = black.shape[0]
+        # w_black = black.shape[1]
 
-        #todo : put the image inside matrix
+        # #todo : put the image inside matrix
 
-        image_center = tuple(np.array(image.shape[1::-1]) / 2)
-        rot_mat = cv2.getRotationMatrix2D(image_center, self.angle, 1.0)
+        # image_center = tuple(np.array(image.shape[1::-1]) / 2)
+        # rot_mat = cv2.getRotationMatrix2D(image_center, self.angle, 1.0)
         
-        proportion = heigth_rotmat/weigth_rotmat
+        # proportion = heigth_rotmat/weigth_rotmat
 
-        y = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
+        # y = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
 
+        # return y
 
+        height, width = image.shape[:2] # image shape has 3 dimensions
+        image_center = (width/2, height/2) # getRotationMatrix2D needs coordinates in reverse order (width, height) compared to shape
 
-        return y
+        rotation_mat = cv2.getRotationMatrix2D(image_center, self.angle, 1.)
+
+        # rotation calculates the cos and sin, taking absolutes of those.
+        abs_cos = abs(rotation_mat[0,0]) 
+        abs_sin = abs(rotation_mat[0,1])
+
+        # find the new width and height bounds
+        bound_w = int(height * abs_sin + width * abs_cos)
+        bound_h = int(height * abs_cos + width * abs_sin)
+
+        # subtract old image center (bringing image back to origo) and adding the new image center coordinates
+        rotation_mat[0, 2] += bound_w/2 - image_center[0]
+        rotation_mat[1, 2] += bound_h/2 - image_center[1]
+
+        # rotate image with the new bounds and translated rotation matrix
+        rotated_mat = cv2.warpAffine(image, rotation_mat, (bound_w, bound_h))
+        return rotated_mat
+
+        
 
 class SobelDerivative(Apply):
     """
@@ -244,7 +265,7 @@ class BilateralBlur(Apply):
 
 if __name__ == "__main__":
     ImageFilters = ImageFilters([#GaussianBlur(kernel_size=5, step_size=2),
-                                 Inverse(),
+                                 #Inverse(),
                                  # Flips(),
                                  # SobelDerivative(),
                                  # ScharrDerivative(),
