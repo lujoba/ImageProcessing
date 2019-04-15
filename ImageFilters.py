@@ -190,7 +190,7 @@ class ScharrDerivative(Apply):
 
     def Compute(self, image):
         image = cv2.imread(image)
-        y = cv2.GaussianBlur(image, (3, 3), 0)
+        y = cv2.ScharrDerivative(image, (3, 3), 0)
 
         return y
 
